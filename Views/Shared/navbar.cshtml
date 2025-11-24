@@ -1,0 +1,121 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+<link href="~/css/navbar.css" rel="stylesheet" asp-append-version="true" />
+
+<header class="navbar-content">
+    <div class="Foodopia-logo">
+        <span class="logo-1">Food</span>
+        <span class="logo-2">opia</span>
+    </div>
+
+    <div class="elements">
+        <div class="login">
+            @{
+                var role = HttpContextAccessor.HttpContext?.Session.GetString("UserRole");
+                if (string.IsNullOrEmpty(role))
+                {
+                    <a href="/Account/Login">
+                        <button class="login-button">Login</button>
+                    </a>
+                }
+                else
+                {
+                    <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                        <button type="submit" class="login-button logout">Logout</button>
+                    </form>
+                }
+            }
+        </div>
+
+        <!-- 🛒 Cart Button -->
+        <div class="cart-button-div">
+            <button id="openCartBtn" class="cart-button" type="button">
+                <div class="cart-img">
+                    <img src="~/cart.png" alt="Cart" />
+                </div>
+                <div class="cart-elements">
+                    <span id="cartCount">0</span> items<br>
+                    ₹<span id="cartTotal">0</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- 📦 Orders Button -->
+        <div class="order-button-div">
+            <button id="openOrderBtn" class="order-button" type="button">
+                <div class="order-img">
+                    <img src="~/order.png" alt="Orders" />
+                </div>
+                <div class="order-elements">
+                    My Orders
+                </div>
+            </button>
+        </div>
+    </div>
+</header>
+
+<body>
+    @RenderBody()
+
+    <script>
+        // 🛒 Open Cart Sidebar
+        function openCartSidebar() {
+            const sidebar = document.getElementById("cartSidebar");
+            const overlay = document.getElementById("cartOverlay");
+            if (sidebar && overlay) {
+                sidebar.classList.add("active");
+                overlay.classList.add("active");
+            }
+        }
+
+        const openCartBtn = document.getElementById("openCartBtn");
+        if (openCartBtn) openCartBtn.addEventListener("click", openCartSidebar);
+
+        // 📦 Open Orders Sidebar
+        function openOrderSidebar() {
+            const sidebar = document.getElementById("orderSidebar");
+            const overlay = document.getElementById("orderOverlay");
+            if (sidebar && overlay) {
+                sidebar.classList.add("active");
+                overlay.classList.add("active");
+            }
+        }
+
+        const openOrderBtn = document.getElementById("openOrderBtn");
+        if (openOrderBtn) openOrderBtn.addEventListener("click", openOrderSidebar);
+
+        // 🧾 Update Navbar Cart Count & Total
+        function updateNavbarCart() {
+            const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+            const countEl = document.getElementById("cartCount");
+            const totalEl = document.getElementById("cartTotal");
+
+            if (!countEl || !totalEl) return;
+
+            let itemCount = 0;
+            let totalPrice = 0;
+
+            cart.forEach(i => {
+                itemCount += i.quantity;
+                totalPrice += i.quantity * i.price;
+            });
+
+            countEl.textContent = itemCount;
+            totalEl.textContent = totalPrice.toFixed(2);
+
+            // Pulse animation
+            const btn = document.querySelector(".cart-button");
+            if (btn) {
+                btn.classList.add("pulse");
+                setTimeout(() => btn.classList.remove("pulse"), 300);
+            }
+        }
+
+        window.addEventListener("cartUpdated", updateNavbarCart);
+        window.addEventListener("storage", updateNavbarCart);
+
+        updateNavbarCart();
+        window.updateNavbarCart = updateNavbarCart;
+    </script>
+</body>

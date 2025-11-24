@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\cake.png" />
+    <Content Remove="wwwroot\cart.png" />
+    <Content Remove="wwwroot\search.png" />
+    <Content Remove="wwwroot\stopwatch.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\cake.png" />
+    <None Include="wwwroot\cart.png" />
+    <None Include="wwwroot\css\Adminaddproducts.css" />
+    <None Include="wwwroot\css\Adminorders.css" />
+    <None Include="wwwroot\css\Adminpage.css" />
+    <None Include="wwwroot\css\footer.css" />
+    <None Include="wwwroot\css\home.css" />
+    <None Include="wwwroot\css\navbar.css" />
+    <None Include="wwwroot\search.png" />
+    <None Include="wwwroot\stopwatch.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\js\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.LiveShare" Version="1.1.57" />
+    <PackageReference Include="Razorpay" Version="3.3.2" />
+  </ItemGroup>
+
+</Project>

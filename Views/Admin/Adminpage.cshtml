@@ -1,0 +1,71 @@
+﻿@{
+    ViewBag.Title = "Admin Dashboard";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="~/css/Adminpage.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Canteen Admin</h2>
+        <a class="active" asp-controller="Admin" asp-action="Adminpage">Dashboard</a>
+        <a asp-controller="Admin" asp-action="Adminorders">Orders</a>
+        <a asp-controller="Admin" asp-action="Adminaddproducts">Add Product</a>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h1>Dashboard Overview</h1>
+        </header>
+
+        <div class="cards">
+            <div class="card">
+                <h3>Orders</h3>
+                <p class="number" id="ordersCount">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Revenue</h3>
+                <p class="number" id="revenueAmount">₹0</p>
+            </div>
+
+            <div class="card">
+                <h3>Pending Orders</h3>
+                <p class="number" id="pendingOrders">0</p>
+            </div>
+        </div>
+
+        <p class="updated-time" id="updatedTime">Last updated: —</p>
+    </div>
+
+    <script>
+        async function loadDashboardStats() {
+            try {
+                const res = await fetch('/Admin/DashboardStats');
+                if (!res.ok) throw new Error('Failed to fetch stats');
+                const data = await res.json();
+
+                document.getElementById('ordersCount').textContent = data.totalOrders;
+                document.getElementById('pendingOrders').textContent = data.pendingOrders;
+                document.getElementById('revenueAmount').textContent = '₹' + data.totalRevenue.toFixed(2);
+                document.getElementById('updatedTime').textContent =
+                    'Last updated: ' + new Date().toLocaleTimeString();
+            } catch (e) {
+                console.error('Dashboard update failed:', e);
+            }
+        }
+
+        // Initial load
+        loadDashboardStats();
+
+        // Auto-refresh every 10 seconds
+        setInterval(loadDashboardStats, 10000);
+    </script>
+</body>
+</html>

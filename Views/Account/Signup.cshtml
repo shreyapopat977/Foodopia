@@ -1,0 +1,63 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Signup | Foodopia</title>
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    
+</head>
+<body>
+    <div class="auth-container">
+        <h1>🧾 Create Account</h1>
+
+        @if (ViewBag.Error != null)
+        {
+            <p class="error">@ViewBag.Error</p>
+        }
+
+        <form asp-controller="Account" asp-action="Signup" method="post">
+            @Html.AntiForgeryToken()
+
+            <input type="text" name="name" placeholder="Name / Shop Name" required />
+            <input type="email" name="email" placeholder="Email" required />
+            <input type="password" name="password" placeholder="Password" required />
+
+            <label>Signup as:</label>
+            <select id="roleSelect" name="role" required>
+                <option value="User">Consumer</option>
+                <option value="Admin">Shopkeeper</option>
+            </select>
+
+            <!-- Shopkeeper fields -->
+            <div class="shop-fields" id="shopFields">
+                <input type="text" name="shopImg" placeholder="Shop Image URL (e.g. https://...)" />
+                <textarea name="shopDescription" placeholder="Describe your shop (e.g. Fast food, bakery...)" rows="3" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:6px;font-size:14px;margin-top:8px;"></textarea>
+            </div>
+
+            <button type="submit">Sign Up</button>
+        </form>
+
+        <p style="text-align:center; margin-top:15px;">
+            Already have an account?
+            <a asp-controller="Account" asp-action="Login">Login</a>
+        </p>
+    </div>
+
+    <script>
+        const roleSelect = document.getElementById("roleSelect");
+        const shopFields = document.getElementById("shopFields");
+
+        roleSelect.addEventListener("change", function () {
+            if (this.value === "Admin") {
+                shopFields.style.display = "block";
+                shopFields.querySelectorAll("input, textarea").forEach(e => e.required = true);
+            } else {
+                shopFields.style.display = "none";
+                shopFields.querySelectorAll("input, textarea").forEach(e => e.required = false);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+﻿@{
+    ViewBag.Title = "Adminaddproducts";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Product</title>
+    <link rel="stylesheet" href="~/css/Adminaddproducts.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <a asp-controller="Admin" asp-action="Adminpage">Dashboard</a>
+        <a asp-controller="Admin" asp-action="Adminorders">Orders</a>
+        <a class="active" asp-controller="Admin" asp-action="Adminaddproducts">Add Product</a>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <h1>Manage Products</h1>
+            <button class="add-btn" id="openModal">➕ Add Product</button>
+        </div>
+
+        <h2>Current Products</h2>
+
+        <div class="items">
+            @if (ViewBag.Products != null && ViewBag.Products.Count > 0)
+            {
+                foreach (var item in ViewBag.Products)
+                {
+                    var isAvailable = item.Is_Available ? "checked" : "";
+                    var cardClass = item.Is_Available ? "items-card available" : "items-card unavailable";
+
+                    <div class="@cardClass" data-id="@item.Product_ID">
+                        <div class="item-image">
+                            <img src="@item.Product_Img" alt="@item.Name" />
+                        </div>
+
+                        <div class="item-elements">
+                            <span class="time">
+                                <img src="~/stopwatch.png" alt="Time" /> @item.Time min
+                            </span>
+                            <h3>@item.Name</h3>
+                            <p class="shop-name">@item.Admin?.Shop_Name</p>
+
+                            <div class="price-cart">
+                                <span class="price">₹@item.Price</span>
+                            </div>
+                        </div>
+
+                        <!-- ✅ Checkbox for availability -->
+                        <div class="is-available">
+                            <label>
+                                <input type="checkbox" class="availability-toggle" @isAvailable />
+                                Available
+                            </label>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>No Products Found.</p>
+            }
+        </div>
+    </div>
+
+    <!-- ✅ Modal Popup -->
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal">
+            <h2>Add New Product</h2>
+            <form asp-controller="Admin" asp-action="AddProduct" method="post" enctype="multipart/form-data" class="add-form">
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" name="Name" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Price (₹):</label>
+                    <input type="number" step="0.01" name="Price" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Product Image URL:</label>
+                    <input type="text" name="Product_Img" placeholder="/images/item.jpg" />
+                </div>
+
+                <div class="form-group">
+                    <label>Preparation Time (min):</label>
+                    <input type="number" name="Time" required placeholder="e.g. 15" />
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-submit">Save Product</button>
+                    <button type="button" id="closeModal" class="btn-cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ✅ Modal handling
+        const openBtn = document.getElementById("openModal");
+        const closeBtn = document.getElementById("closeModal");
+        const modalOverlay = document.getElementById("modalOverlay");
+
+        openBtn.addEventListener("click", () => {
+            modalOverlay.style.display = "flex";
+        });
+
+        closeBtn.addEventListener("click", () => {
+            modalOverlay.style.display = "none";
+        });
+
+        modalOverlay.addEventListener("click", (e) => {
+            if (e.target === modalOverlay) modalOverlay.style.display = "none";
+        });
+
+        document.querySelectorAll('.availability-toggle').forEach(toggle => {
+            toggle.addEventListener('change', async function () {
+                const card = this.closest('.items-card');
+                const productId = card.getAttribute('data-id');
+                const isAvailable = this.checked;
+
+                // Instantly change appearance
+                card.classList.toggle('unavailable', !isAvailable);
+                card.classList.toggle('available', isAvailable);
+
+                try {
+                    const response = await fetch('/Admin/ToggleAvailability', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: productId, isAvailable: isAvailable })
+                    });
+
+                    const result = await response.json();
+                    console.log(result.message);
+
+                    // Optional: small toast notification
+                    showToast(result.success ? "✅ Updated successfully!" : "❌ Update failed!");
+                } catch (error) {
+                    console.error("Error updating availability:", error);
+                }
+            });
+        });
+
+        // 🔔 Optional toast for better feedback
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.className = 'toast';
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+    </script>
+</body>
+</html>

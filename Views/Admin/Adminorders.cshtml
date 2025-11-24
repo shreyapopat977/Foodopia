@@ -1,0 +1,120 @@
+﻿@{
+    Layout = null;
+    ViewBag.Title = "Admin Orders";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Admin Orders - Foodopia</title>
+    <link rel="stylesheet" href="~/css/Adminorders.css" asp-append-version="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <a asp-controller="Admin" asp-action="Adminpage">Dashboard</a>
+        <a class="active" asp-controller="Admin" asp-action="Adminorders">Orders</a>
+        <a asp-controller="Admin" asp-action="Adminaddproducts">Add Product</a>
+    </div>
+
+    <div class="main-content">
+        <header class="orders-header">
+            <h1>Orders</h1>
+            <p class="sub">Live updates every 30 seconds</p>
+            <div id="lastUpdated" class="last-updated">—</div>
+        </header>
+
+        <div id="ordersContainer" class="orders-list">
+            <div class="empty">Loading orders...</div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" style="display:none"></div>
+
+    <script>
+        async function fetchOrders() {
+            try {
+                const res = await fetch('/Admin/GetOrders');
+                if (!res.ok) return;
+                const orders = await res.json();
+                renderOrders(orders);
+                updateTimestamp();
+            } catch (e) { console.error(e); }
+        }
+
+        function updateTimestamp() {
+            document.getElementById('lastUpdated').textContent =
+                'Last updated: ' + new Date().toLocaleString();
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersContainer');
+            container.innerHTML = '';
+
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<div class="empty">No orders yet.</div>';
+                return;
+            }
+
+            for (const o of orders) {
+                const div = document.createElement('div');
+                div.className = 'order-item';
+
+                       div.innerHTML = `
+            <div class="left">
+                <img src="${o.productImg}" alt="${o.productName}" />
+            </div>
+            <div class="middle">
+                <div class="title">${o.productName}</div>
+                <div class="meta">${o.userName} — ${new Date(o.time).toLocaleString()}</div>
+            </div>
+            <div class="right">
+                <button class="btn-complete" data-id="${o.order_ID}" ${o.is_Completed ? 'disabled' : ''}>
+                    ${o.is_Completed ? 'Completed' : 'Mark Completed'}
+                </button>
+            </div>
+        `;
+
+
+                       div.querySelector('.btn-complete').addEventListener('click', e => {
+            markCompleted(o.order_ID, e.target);
+        });
+
+
+                container.appendChild(div);
+            }
+        }
+
+        async function markCompleted(id, btn) {
+            btn.disabled = true;
+            const res = await fetch('/Admin/MarkCompleted', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ OrderId: id })
+            });
+            const json = await res.json();
+            if (json.success) {
+                btn.textContent = 'Completed';
+                showToast('✅ Order marked completed');
+            } else {
+                showToast('❌ ' + json.message, true);
+                btn.disabled = false;
+            }
+        }
+
+        function showToast(text, error = false) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.className = error ? 'toast error' : 'toast';
+            t.style.display = 'block';
+            setTimeout(() => t.style.opacity = 1, 10);
+            setTimeout(() => { t.style.opacity = 0; t.style.display = 'none'; }, 2000);
+        }
+
+        fetchOrders();
+        setInterval(fetchOrders, 30000);
+    </script>
+</body>
+</html>

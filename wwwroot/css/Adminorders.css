@@ -1,0 +1,122 @@
+﻿body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    height: 100vh;
+    background-color: white;
+    color: #333;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    background: linear-gradient(180deg, #a6e22e, #e4ff91);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+}
+
+    .sidebar h2 {
+        text-align: center;
+        font-size: 17px;
+        margin-bottom: 25px;
+        color: #2c2c2c;
+    }
+
+    .sidebar a {
+        text-decoration: none;
+        padding: 10px 20px;
+        color: #1a1a1a;
+        font-weight: 500;
+        transition: 0.3s;
+    }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background-color: #c8ff83;
+            border-left: 5px solid #77b300;
+        }
+
+.main-content {
+    flex: 1;
+    padding: 20px 40px;
+}
+
+.orders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.orders-list {
+    margin-top: 20px;
+}
+
+.order-item {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    padding: 10px 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+
+.left img {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.middle {
+    flex: 1;
+    margin-left: 15px;
+}
+
+.title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.meta {
+    font-size: 13px;
+    color: #666;
+    margin-top: 3px;
+}
+
+.btn-complete {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+    .btn-complete:disabled {
+        background: #aaa;
+    }
+
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #27ae60;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: 0.4s;
+}
+
+    .toast.error {
+        background: #e74c3c;
+    }
+
+.empty {
+    color: #777;
+    text-align: center;
+    margin-top: 50px;
+}

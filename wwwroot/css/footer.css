@@ -1,0 +1,121 @@
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+footer {
+    background-color: #000;
+    color: white;
+    width: 100%;
+    padding-top: 40px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.footer-container {
+    width: 80%;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 30px;
+}
+
+/* Brand Section */
+.logo-brand {
+    flex: 1;
+    min-width: 220px;
+}
+
+.logo-div {
+    display: flex;
+    align-items: center;
+}
+
+.footer-logo1 {
+    color: yellow;
+    font-weight: 800;
+    font-size: 42px;
+}
+
+.footer-logo2 {
+    color: green;
+    font-weight: 800;
+    font-size: 42px;
+    margin-left: 5px;
+}
+
+.footer-tagline {
+    color: #bbb;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.social-links {
+    margin-top: 20px;
+    display: flex;
+    gap: 18px;
+}
+
+    .social-links a {
+        color: white;
+        font-size: 22px;
+        transition: all 0.3s ease;
+    }
+
+        .social-links a:hover {
+            color: green;
+            transform: scale(1.2);
+        }
+
+
+/* Quick Links */
+.footer-links {
+    flex: 1;
+    min-width: 180px;
+}
+
+    .footer-links h3,
+    .footer-contact h3 {
+        color: yellow;
+        margin-bottom: 15px;
+    }
+
+    .footer-links ul {
+        list-style: none;
+    }
+
+        .footer-links ul li {
+            margin-bottom: 10px;
+        }
+
+            .footer-links ul li a {
+                text-decoration: none;
+                color: white;
+                transition: color 0.3s ease;
+            }
+
+                .footer-links ul li a:hover {
+                    color: green;
+                }
+
+/* Contact Section */
+.footer-contact {
+    flex: 1;
+    min-width: 200px;
+}
+
+    .footer-contact p {
+        margin-bottom: 10px;
+        color: #ccc;
+    }
+
+/* Bottom Line */
+.footer-bottom {
+    text-align: center;
+    border-top: 1px solid #333;
+    margin-top: 40px;
+    padding: 15px 0;
+    color: #999;
+    font-size: 14px;
+}

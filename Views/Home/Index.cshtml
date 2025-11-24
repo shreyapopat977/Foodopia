@@ -1,0 +1,531 @@
+﻿@{
+    Layout = "~/Views/Shared/navbar.cshtml";
+    ViewBag.Title = "Home";
+    bool isLoggedIn = Context.Session.GetInt32("UserID") != null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Foodopia | Delicious Delivered</title>
+    <link href="~/css/home.css" rel="stylesheet" asp-append-version="true" />
+</head>
+
+<body>
+    <div class="shop-container">
+        <div class="shop-head"><h1>YOUR CANTEEN</h1></div>
+
+        <div class="all-shops">
+            <div class="shops">
+                @foreach (var shop in ViewBag.Admins)
+                {
+                    <div class="shop-card" data-admin-id="@shop.Admin_ID">
+                        <img src="@shop.Shop_Img" alt="@shop.Shop_Name" />
+                        <h4>@shop.Shop_Name</h4>
+                        <p>@shop.Shop_Description</p>
+                    </div>
+                }
+            </div>
+
+
+            <div class="items">
+                @foreach (var item in ViewBag.Products)
+                {
+                    var cardClass = item.Is_Available ? "items-card available" : "items-card unavailable";
+                    <div class="@cardClass"
+                         data-id="@item.Product_ID"
+                         data-admin-id="@item.Admin_ID"
+                         data-name="@item.Name"
+                         data-price="@item.Price"
+                         data-img="@item.Product_Img">
+
+                        <div class="item-image">
+                            <img src="@item.Product_Img" alt="@item.Name" />
+                        </div>
+                        <div class="item-elements">
+                            <span class="time"><img src="~/stopwatch.png" /> @item.Time min</span>
+                            <h3>@item.Name</h3>
+                            <p>@item.Admin?.Shop_Name</p>
+                            <div class="price-cart">
+                                <span class="price">₹@item.Price</span>
+                                <div class="item-cart">
+                                    @if (item.Is_Available)
+                                    {
+                                        <button class="add-btn">Add</button>
+                                        <div class="quantity-box" style="display:none;">
+                                            <button class="minus">−</button>
+                                            <span class="qty">1</span>
+                                            <button class="plus">+</button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button class="add-btn disabled" disabled>Unavailable</button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- 🛒 Cart Sidebar -->
+    <div id="cartSidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h2>My Cart</h2>
+            <button id="closeCart">✕</button>
+        </div>
+
+        <div class="cart-body" id="cartBody">
+            <p style="text-align:center; color:gray;">Your cart is empty.</p>
+        </div>
+
+        <div class="bill-section">
+            <h3>Bill details</h3>
+            <p>Items total <span id="itemsTotal">₹0</span></p>
+            <p>Delivery charge <span>₹25</span></p>
+            <p>Handling charge <span>₹2</span></p>
+            <p>Small cart charge <span>₹20</span></p>
+            <h4>Grand total <span id="grandTotal">₹0</span></h4>
+        </div>
+
+        <div class="cart-footer">
+            <div class="footer-total">₹<span id="footerTotal">0</span> TOTAL</div>
+            <button id="checkoutBtn">
+                @(isLoggedIn ? "Proceed to Payment →" : "Login to Proceed →")
+            </button>
+        </div>
+    </div>
+
+    <div id="cartOverlay" class="cart-overlay"></div>
+
+    <!-- Order Sidebar (place near cart sidebar markup) -->
+    <div id="orderSidebar" class="order-sidebar">
+        <div class="order-header">
+            <h2>My Orders</h2>
+            <button id="closeOrderSidebar">✕</button>
+        </div>
+
+        <div class="order-body" id="orderBody">
+            <p style="text-align:center; color:gray;">No active orders.</p>
+        </div>
+
+        <div class="order-footer">
+            <small>Orders update in real-time.</small>
+        </div>
+    </div>
+    <div id="orderOverlay" class="cart-overlay"></div>
+
+
+    <!-- 💳 Fake Payment Modal -->
+    <div id="fakePaymentModal" class="fake-payment-modal">
+        <div class="fake-payment-card">
+            <h3>Complete Your Payment</h3>
+            <p id="fakeAmountText">Amount: ₹0</p>
+
+            <div class="fake-form">
+                <label>Card Number</label>
+                <input type="text" id="fakeCard" placeholder="4242 4242 4242 4242" />
+                <label>Name on Card</label>
+                <input type="text" id="fakeName" placeholder="Test User" />
+                <label>Expiry</label>
+                <input type="text" id="fakeExpiry" placeholder="12/34" />
+                <label>CVV</label>
+                <input type="text" id="fakeCvv" placeholder="123" />
+            </div>
+
+            <div class="fake-actions">
+                <button id="fakePayBtn" class="btn btn-primary">Pay Now</button>
+                <button id="fakeCancelBtn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sidebar = document.getElementById("cartSidebar");
+        const overlay = document.getElementById("cartOverlay");
+        const closeCart = document.getElementById("closeCart");
+        const cartBody = document.getElementById("cartBody");
+        const itemsTotal = document.getElementById("itemsTotal");
+        const grandTotal = document.getElementById("grandTotal");
+        const footerTotal = document.getElementById("footerTotal");
+        const checkoutBtn = document.getElementById("checkoutBtn");
+        const orderSidebar = document.getElementById('orderSidebar');
+        const orderOverlay = document.getElementById('orderOverlay');
+        const orderBody = document.getElementById('orderBody');
+        const closeOrderSidebar = document.getElementById('closeOrderSidebar');
+
+        // ✅ LocalStorage Cart
+        function getCart() {
+            return JSON.parse(localStorage.getItem("cart") || "[]");
+        }
+        function saveCart(cart) {
+            localStorage.setItem("cart", JSON.stringify(cart));
+            window.dispatchEvent(new Event("cartUpdated"));
+        }
+
+        function openCart() {
+            sidebar.classList.add("active");
+            overlay.classList.add("active");
+            renderCart();
+        }
+        function closeCartFunc() {
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+        }
+        closeCart.addEventListener("click", closeCartFunc);
+        overlay.addEventListener("click", closeCartFunc);
+
+        // ✅ Add / Update Cart
+        function addToCart(id, name, price, img, qtyChange) {
+            let cart = getCart();
+            let existing = cart.find(item => item.id === id);
+
+            if (existing) {
+                existing.quantity += qtyChange;
+                if (existing.quantity <= 0)
+                    cart = cart.filter(i => i.id !== id);
+            } else {
+                cart.push({ id, name, price, img, quantity: 1 });
+            }
+
+            saveCart(cart);
+            renderCart();
+            openCart();
+        }
+
+        // ✅ Render Cart
+        function renderCart() {
+            let cart = getCart();
+            cartBody.innerHTML = "";
+            if (cart.length === 0) {
+                cartBody.innerHTML = `<p style="text-align:center; color:gray;">Your cart is empty.</p>`;
+                footerTotal.textContent = "0";
+                return;
+            }
+
+            let total = 0;
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                cartBody.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.img}" alt="${item.name}" />
+                        <div class="details">
+                            <h4>${item.name}</h4>
+                            <p>₹${item.price}</p>
+                            <div class="quantity-control">
+                                <button onclick="addToCart(${item.id}, '${item.name}', ${item.price}, '${item.img}', -1)">−</button>
+                                <span>${item.quantity}</span>
+                                <button onclick="addToCart(${item.id}, '${item.name}', ${item.price}, '${item.img}', 1)">+</button>
+                            </div>
+                        </div>
+                        <span class="item-total">₹${itemTotal}</span>
+                    </div>`;
+            });
+
+            const grand = total + 25 + 2 + 20;
+            itemsTotal.textContent = `₹${total}`;
+            grandTotal.textContent = `₹${grand}`;
+            footerTotal.textContent = grand;
+        }
+
+        // ✅ Add buttons (only for available items)
+        document.querySelectorAll(".add-btn:not(.disabled)").forEach(btn => {
+            btn.addEventListener("click", function () {
+                const card = this.closest(".items-card");
+                const id = parseInt(card.dataset.id);
+                const name = card.dataset.name;
+                const price = parseFloat(card.dataset.price);
+                const img = card.dataset.img;
+                addToCart(id, name, price, img, 1);
+            });
+        });
+
+        // 🟢 Fake Payment Modal Logic
+        const fakeModal = document.getElementById('fakePaymentModal');
+        const fakeAmountText = document.getElementById('fakeAmountText');
+        const fakePayBtn = document.getElementById('fakePayBtn');
+        const fakeCancelBtn = document.getElementById('fakeCancelBtn');
+
+        function openFakeGateway(cart, amount) {
+            fakeAmountText.textContent = `Amount: ₹${amount}`;
+            fakeModal.style.display = 'flex';
+
+            fakePayBtn.onclick = async () => {
+                fakePayBtn.disabled = true;
+                fakePayBtn.textContent = "Processing...";
+
+                const fakePaymentId = 'FAKEPAY_' + Math.random().toString(36).substring(2, 12).toUpperCase();
+                const payload = {
+                    PaymentId: fakePaymentId,
+                    Items: cart.map(i => ({
+                        Product_ID: i.id,
+                        Name: i.name,
+                        Price: i.price,
+                        Img: i.img,
+                        Quantity: i.quantity
+                    }))
+                };
+
+                const res = await fetch("/Order/PaymentSuccess", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const json = await res.json();
+                    localStorage.removeItem("cart");
+                    fakeModal.style.display = 'none';
+                    renderCart();
+                    showToast("✅ Payment Successful! Your order has been placed.");
+                    setTimeout(() => openOrderSidebar(), 2000);
+                } else {
+                    showToast("❌ Payment failed. Try again.", true);
+                }
+
+                fakePayBtn.disabled = false;
+                fakePayBtn.textContent = "Pay Now";
+            };
+        }
+
+        fakeCancelBtn.addEventListener('click', () => {
+            fakeModal.style.display = 'none';
+        });
+
+        // ✅ Simple Green Toast
+        function showToast(message, isError = false) {
+            const toast = document.createElement("div");
+            toast.className = "toast-message" + (isError ? " error" : "");
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add("show"), 10);
+            setTimeout(() => {
+                toast.classList.remove("show");
+                setTimeout(() => toast.remove(), 500);
+            }, 2500);
+        }
+
+        // ✅ Checkout Button Logic (this was missing)
+        checkoutBtn.addEventListener("click", async () => {
+            const loggedIn = @isLoggedIn.ToString().ToLower();
+            if (!loggedIn) {
+                alert("Please login to proceed!");
+                window.location.href = "/Account/Login";
+                return;
+            }
+
+            const cart = getCart();
+            if (cart.length === 0) {
+                alert("Your cart is empty!");
+                return;
+            }
+
+            const res = await fetch("/Order/CreateOrder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(cart)
+            });
+
+            if (!res.ok) {
+                showToast("Server error creating order", true);
+                return;
+            }
+
+            const data = await res.json();
+            openFakeGateway(cart, data.amount);
+        });
+
+        renderCart();
+
+            function openOrderSidebar() {
+            orderSidebar.classList.add('active');
+            orderOverlay.classList.add('active');
+            loadUserOrders();
+        }
+        function closeOrderSidebarFunc() {
+            orderSidebar.classList.remove('active');
+            orderOverlay.classList.remove('active');
+        }
+        if (closeOrderSidebar) closeOrderSidebar.addEventListener('click', closeOrderSidebarFunc);
+        if (orderOverlay) orderOverlay.addEventListener('click', closeOrderSidebarFunc);
+
+        // Timer storage: orderId => intervalId
+        const orderTimers = {};
+
+        // Render orders in sidebar
+        function renderUserOrders(orders) {
+            orderBody.innerHTML = '';
+            if (!orders || orders.length === 0) {
+                orderBody.innerHTML = '<p style="text-align:center;color:gray">No active orders.</p>';
+                return;
+            }
+
+            orders.forEach(o => {
+                const outer = document.createElement('div');
+                outer.className = 'order-card';
+                outer.dataset.orderId = o.order_ID;
+
+                // compute remaining seconds: placedAt + prepMinutes => end time
+                const placed = new Date(o.placedAt);
+                const end = new Date(placed.getTime() + (o.prepMinutes || 0) * 60 * 1000);
+                const remaining = Math.max(0, Math.round((end - new Date())/1000));
+
+                outer.innerHTML = `
+                    <div class="order-left">
+                        <img src="${o.productImg}" alt="${o.productName}" />
+                    </div>
+                    <div class="order-mid">
+                        <div class="order-title">${o.productName}</div>
+                        <div class="order-meta">Placed: ${placed.toLocaleString()}</div>
+                        <div class="order-timer" id="timer_${o.order_ID}">${formatSeconds(remaining)}</div>
+                    </div>
+                    <div class="order-right">
+                        <div class="order-status" id="status_${o.order_ID}">${o.is_Completed ? 'Ready' : 'Preparing'}</div>
+                    </div>
+                `;
+                orderBody.appendChild(outer);
+
+                // set up countdown interval (one per order). Clear existing if present
+                if (orderTimers[o.Order_ID]) {
+                    clearInterval(orderTimers[o.Order_ID]);
+                }
+                orderTimers[o.Order_ID] = startCountdown(o.Order_ID, end, o.Is_Completed);
+            });
+        }
+
+        function formatSeconds(sec) {
+            if (sec <= 0) return '00:00';
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+        }
+
+        // Countdown that updates DOM and triggers "almost ready" toast
+        function startCountdown(orderId, endTime, isCompleted) {
+            return setInterval(async () => {
+                const now = new Date();
+                let remaining = Math.round((endTime - now) / 1000);
+                const timerEl = document.getElementById('timer_' + orderId);
+                const statusEl = document.getElementById('status_' + orderId);
+
+                if (remaining <= 0) {
+                    if (timerEl) timerEl.textContent = '00:00';
+                    // show almost ready (only once)
+                    showToast('Your order #' + orderId + ' is almost ready — please collect soon!');
+                    clearInterval(orderTimers[orderId]);
+                    // still poll server for final completion
+                    return;
+                }
+
+                if (timerEl) timerEl.textContent = formatSeconds(remaining);
+
+                // show small pre-notice when <= 60s
+                if (remaining === 60) {
+                    showToast('Your order #' + orderId + ' will be ready in 1 minute.');
+                }
+
+                // if admin completed meanwhile, we'll discover via polling (see pollOrders())
+                // update status element if needed
+                if (statusEl && isCompleted) statusEl.textContent = 'Ready';
+            }, 1000);
+        }
+
+        // Load orders once
+        async function loadUserOrders() {
+            try {
+                const res = await fetch('/Order/UserOrders');
+                if (!res.ok) {
+                    console.warn('unable to fetch user orders', res.status);
+                    return;
+                }
+                const orders = await res.json();
+                renderUserOrders(orders);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Poll orders for status/updates every 5s
+        async function pollOrders() {
+            try {
+                const res = await fetch('/Order/UserOrders');
+                if (!res.ok) return;
+                const orders = await res.json();
+
+                // update UI: timers already running will continue; update status (Is_Completed)
+                orders.forEach(o => {
+                    const statusEl = document.getElementById('status_' + o.Order_ID);
+                    if (statusEl && o.Is_Completed && statusEl.textContent !== 'Ready') {
+                        statusEl.textContent = 'Ready';
+                        showToast('Your order #' + o.order_ID + ' is ready — collect now!');
+                    }
+                    // if new order appeared and sidebar open, re-render to add it (simple approach)
+                });
+
+                // If sidebar is active, re-render so new orders appear
+                if (orderSidebar && orderSidebar.classList.contains('active')) {
+                    renderUserOrders(orders);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // small toast
+        function showToast(text) {
+            const t = document.createElement('div');
+            t.className = 'small-toast';
+            t.textContent = text;
+            document.body.appendChild(t);
+            setTimeout(() => t.classList.add('show'), 10);
+            setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3500);
+        }
+
+        // When a fake payment finishes (you already call /Order/PaymentSuccess)
+        // modify the success flow on client to:
+        // - wait 2s then open order sidebar and load orders.
+
+        // Example: after your fake payment fetch returns success:
+        // ... in fakePayBtn.onclick after res.ok:
+        // const json = await res.json(); if (json.success) { setTimeout(openOrderSidebar, 2000); }
+        
+        // Polling setup
+        setInterval(pollOrders, 1000);
+
+                // ✅ Shop filter logic
+        document.querySelectorAll('.shop-card').forEach(shopCard => {
+            shopCard.addEventListener('click', function () {
+                const adminId = this.getAttribute('data-admin-id');
+                const allItems = document.querySelectorAll('.items-card');
+                const isActive = this.classList.contains('active');
+
+                // Remove active from all shops
+                document.querySelectorAll('.shop-card').forEach(s => s.classList.remove('active'));
+
+                if (isActive) {
+                    // if user clicks the same shop again -> show all items
+                    allItems.forEach(item => item.style.display = 'block');
+                    return;
+                }
+
+                // Mark current shop as active
+                this.classList.add('active');
+
+                // Filter items
+                allItems.forEach(item => {
+                    const itemAdmin = item.getAttribute('data-admin-id');
+                    item.style.display = (itemAdmin === adminId) ? 'block' : 'none';
+                });
+            });
+        });
+
+    </script>
+
+</body>
+</html>

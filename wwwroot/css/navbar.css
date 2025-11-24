@@ -1,0 +1,57 @@
+﻿/* 🌿 Navbar Layout */
+.navbar-content {
+    display: flex;
+    align-items: center;
+    width: 80vw;
+    justify-content: space-between;
+    padding: 12px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
+
+/* Logo */
+.Foodopia-logo {
+    font-weight: 800;
+    font-size: 30px;
+}
+
+.logo-1 {
+    color: rgb(199, 199, 20);
+}
+
+.logo-2 {
+    color: green;
+}
+
+.elements {
+    display: flex;
+    gap: 40px;
+}
+.login {
+    align-content: center;
+}
+
+.login-button {
+    background-color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.cart-button-div, .order-button-div {
+    align-content: center;
+}
+
+.cart-button, .order-button {
+    background-color: green;
+    border: none;
+    border-radius: 10px;
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    color: white;
+    align-items: center;
+    cursor: pointer;
+}
+
